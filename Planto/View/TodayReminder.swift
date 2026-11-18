@@ -29,7 +29,7 @@ struct TodayReminder: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)
                 
-                ProgressView(value: Double(viewModel.doneCount) / Double(viewModel.plants.count))
+                ProgressView(value: viewModel.plants.isEmpty ? 0 : Double(viewModel.doneCount) / Double(viewModel.plants.count))
                     .tint(Color(red: 0.24, green: 0.55, blue: 0.43))
                     .scaleEffect(x: 1, y: 2)     // يكبّر السماكة 3 أضعاف
                     .padding(.horizontal)
@@ -88,5 +88,10 @@ struct TodayReminder: View {
 }
 
 #Preview {
-    TodayReminder(viewModel: PlantsViewModel())
+    let viewModel = PlantsViewModel()
+    viewModel.plants = [
+        Plant(name: "Monstera", room: .kitchen, light: .fullSun, wateringDays: .everyDay, water: .ml20to50),
+        Plant(name: "Pothos", room: .bedroom, light: .fullSun, wateringDays: .every2Days, water: .ml50to100, isWatered: true)
+    ]
+    return TodayReminder(viewModel: viewModel)
 }
