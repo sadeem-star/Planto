@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AllDone: View {
+    var viewModel: PlantsViewModel
     @State private var showSheet = false
     var body: some View {
         ZStack {
@@ -59,12 +60,12 @@ struct AllDone: View {
                 .padding(.bottom, 24)
             }
             .sheet(isPresented: $showSheet) {
-                SetReminderView(viewModel: PlantsViewModel())
+                SetReminderView(viewModel: viewModel)
             }
         }
     }
 }
 
 #Preview {
-    AllDone()
+    AllDone(viewModel: PlantsViewModel())
 }

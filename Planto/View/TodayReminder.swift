@@ -1,13 +1,4 @@
 import SwiftUI
-struct Plant: Identifiable {
-    let id = UUID()
-    var room: String
-    var name: String
-    var light: String
-    var water: String
-    var isDone = false
-}
-
 struct TodayReminder: View {
     @State private var showSheet = false
     
@@ -46,11 +37,11 @@ struct TodayReminder: View {
                 List {
                     ForEach($viewModel.plants) { $plant in
                         PlantRow(
-                            room: plant.room,
+                            room: plant.room.rawValue,
                             name: plant.name,
-                            light: plant.light,
-                            water: plant.water,
-                            isDone: $plant.isDone
+                            light: plant.light.rawValue,
+                            water: plant.water.rawValue,
+                            isDone: $plant.isWatered
                         )
                         .onTapGesture {
                             selectedPlant = plant
@@ -89,70 +80,13 @@ struct TodayReminder: View {
             }
             .overlay {
                 if viewModel.allDone {
-                    AllDone()
+                    AllDone(viewModel: viewModel)
                 }
             }
         }
     }
 }
-
-
-struct PlantRow: View {
-    let room: String
-    let name: String
-    let light: String
-    let water: String
-    @Binding var isDone: Bool
-
-    var body: some View {
-        HStack(spacing: 16) {
-
-            Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 28))
-                .foregroundStyle(isDone ? Color(red: 0.24, green: 0.8, blue: 0.55) : .gray)
-                .onTapGesture {
-                        isDone.toggle()          // يقلب القيمة
-                    }
-
-            VStack(alignment: .leading, spacing: 6) {
-
-                Label("in \(room)", systemImage: "location")
-                    .font(.footnote)
-                    .foregroundStyle(.gray)
-
-                Text(name)
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(.white)
-
-                HStack(spacing: 8) {
-
-                    Label(light, systemImage: "sun.max")
-                        .font(.footnote)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(Capsule())
-
-                    Label(water, systemImage: "drop")
-                        .font(.footnote)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(Capsule())
-                }
-            }
-        }
-        .listRowBackground(Color.black)
-    }
-}
-    
-
-
 
 #Preview {
     TodayReminder(viewModel: PlantsViewModel())
 }
-
-

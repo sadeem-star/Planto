@@ -1,62 +1,65 @@
-import SwiftUI   // المكتبة اللي نبني فيها الشاشات (لازم تكون أول سطر)
+import SwiftUI
 
-// struct = قالب شاشة. اسمها SetReminderView وهي من نوع View (يعني شاشة)
 struct SetReminderView: View {
     var viewModel: PlantsViewModel
     var plantToEdit: Plant? = nil
     @Environment(\.dismiss) var dismiss
 
-    // @State = صندوق يحفظ اللي تكتبه في الخانة
-    // plantName اسم الصندوق، و "" يعني فاضي في البداية
     @State private var plantName: String
-    init(viewModel: PlantsViewModel, plantToEdit: Plant? = nil) {
-            self.viewModel = viewModel
-            self.plantToEdit = plantToEdit
-            _plantName = State(initialValue: plantToEdit?.name ?? "")
-        }
+    @State private var room: Room
+    @State private var light: Light
+    @State private var wateringDays: WateringDays
+    @State private var water: Water
 
-    // body = هنا نكتب شكل الشاشة كله
+    init(viewModel: PlantsViewModel, plantToEdit: Plant? = nil) {
+        self.viewModel = viewModel
+        self.plantToEdit = plantToEdit
+        _plantName = State(initialValue: plantToEdit?.name ?? "")
+        _room = State(initialValue: plantToEdit?.room ?? .bedroom)
+        _light = State(initialValue: plantToEdit?.light ?? .fullSun)
+        _wateringDays = State(initialValue: plantToEdit?.wateringDays ?? .everyDay)
+        _water = State(initialValue: plantToEdit?.water ?? .ml20to50)
+    }
+
     var body: some View {
 
-        // ZStack = نحط الأشياء فوق بعض بالعمق
-        // هنا: الخلفية السوداء تحت، وكل شيء ثاني فوقها
         ZStack {
 
-            // الخلفية السوداء. ignoresSafeArea تخليها تغطي الشاشة للأطراف
             Color(white: 0.1).ignoresSafeArea()
 
-            // VStack = نرتب الأشياء من فوق لتحت
             VStack(spacing: 10) {
 
-                // ========== القطعة 1: الهيدر ==========
-                // HStack = نرتب الأشياء جنب بعض (أفقي)
                 HStack {
 
-                    // زر X (أيقونة من أيقونات آبل)
                     Button {
-                        dismiss()                                 // يقفل الورقة
+                        dismiss()
                     } label: {
                         Image(systemName: "xmark")
                             .padding(12)
                             .background(Color.gray.opacity(0.3))
                             .clipShape(Circle())
-                    }                      // نقصها على شكل دائرة
+                    }
 
-                    Spacer()   // مساحة فاضية تدفع زر X لليسار
+                    Spacer()
 
-                    Text("Set Reminder")   // عنوان الشاشة
+                    Text("Set Reminder")
 
-                    Spacer()   // مساحة فاضية تدفع العنوان للنص
+                    Spacer()
 
-                    // زر ✓ الأخضر
                     Button {
-                        if let plant = plantToEdit {
-                                viewModel.updatePlant(plant, name: plantName)
-                            } else {
-                                viewModel.addPlant(name: plantName)
-                            }
-                            dismiss()
-                                                         
+                        if var plant = plantToEdit {
+                            plant.name = plantName
+                            plant.room = room
+                            plant.light = light
+                            plant.wateringDays = wateringDays
+                            plant.water = water
+                            viewModel.updatePlant(plant)
+                        } else {
+                            viewModel.addPlant(name: plantName, room: room, light: light,
+                                               wateringDays: wateringDays, water: water)
+                        }
+                        dismiss()
+
                     } label: {
                         Image(systemName: "checkmark")
                             .padding(12)
@@ -64,56 +67,81 @@ struct SetReminderView: View {
                             .clipShape(Circle())
                     }
                 }
-                .foregroundStyle(.white)   // كل اللي داخل الـ HStack يصير أبيض
-                .padding()                 // مسافة حول الهيدر كله
+                .foregroundStyle(.white)
+                .padding()
 
-                // ========== القطعة 2: خانة اسم النبتة ==========
                 HStack {
                     Text("Plant Name")
                         .foregroundStyle(.white)
 
-                    // خانة الكتابة. "Pothos" الكلام الباهت داخلها
-                    // $plantName = اربط الخانة بالصندوق عشان يحفظ اللي تكتبه
                     TextField("Pothos", text: $plantName)
                 }
-                .padding()                                // مسافة داخل الخانة
-                .background(Color.gray.opacity(0.2))      // خلفية رمادية
-                .clipShape(Capsule())                     // أطراف بيضاوية
-                .padding(.horizontal)                     // مسافة من اليمين واليسار
+                .padding()
+                .background(Color.gray.opacity(0.2))
+                .clipShape(Capsule())
+                .padding(.horizontal)
 
-                // ========== القطعة 3: القائمة الأولى (Room و Light) ==========
-                List {
-                    // Label = أيقونة مع نص
-                    Label("Room", systemImage: "location")
-                        .badge("Bedroom")                              // القيمة على اليمين
-                        .listRowBackground(Color.gray.opacity(0.2))    // لون خلفية الصف
-
-                    Label("Light", systemImage: "sun.max")
-                        .badge("Full sun")
-                        .listRowBackground(Color.gray.opacity(0.2))
+                VStack(spacing: 0) {
+                    HStack {
+                        Label("Room", systemImage: "location")
+                        Spacer()
+                        Picker("Room", selection: $room) {
+                            ForEach(Room.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .labelsHidden()
+                        .tint(.gray)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    Divider().padding(.leading, 16)
+                    HStack {
+                        Label("Light", systemImage: "sun.max")
+                        Spacer()
+                        Picker("Light", selection: $light) {
+                            ForEach(Light.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .labelsHidden()
+                        .tint(.gray)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
                 }
-                .scrollContentBackground(.hidden)   // نشيل الخلفية الافتراضية للقائمة
-                .scrollDisabled(true)               // نمنع التمرير لأن الصفوف قليلة
-                .frame(height: 160)
-                .foregroundStyle(.white)
-                
-                // ========== القطعة 4: القائمة الثانية (Watering و Water) ==========
-                List {
-                    Label("Watering Day", systemImage: "drop")
-                        .badge("Every day")//هو تعديل جاهز من آبل يحط نص صغير على أقصى يمين الصف داخل الـ List. يعني بدل ما نسوي HStack
-                        .listRowBackground(Color.gray.opacity(0.2))
+                .background(Color.gray.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .padding(.horizontal)
+                .padding(.top, 10)
 
-                    Label("Water", systemImage: "drop")
-                        .badge("20-50 ml")
-                        .listRowBackground(Color.gray.opacity(0.2))
+                VStack(spacing: 0) {
+                    HStack {
+                        Label("Watering Days", systemImage: "drop")
+                        Spacer()
+                        Picker("Watering Days", selection: $wateringDays) {
+                            ForEach(WateringDays.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .labelsHidden()
+                        .tint(.gray)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    Divider().padding(.leading, 16)
+                    HStack {
+                        Label("Water", systemImage: "drop")
+                        Spacer()
+                        Picker("Water", selection: $water) {
+                            ForEach(Water.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        .labelsHidden()
+                        .tint(.gray)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
                 }
-                .scrollContentBackground(.hidden)
-                .scrollDisabled(true)
-                .frame(height: 160)
+                .background(Color.gray.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .padding(.horizontal)
+                .padding(.top, 10)
                 .foregroundStyle(.white)
 
-                // Spacer في آخر الـ VStack يدفع كل شيء لفوق
-                
                 if let plant = plantToEdit {
                     Button {
                         viewModel.deletePlant(plant)
@@ -136,7 +164,6 @@ struct SetReminderView: View {
     }
 }
 
-// الـ Preview هو اللي يعرض الشاشة على اليمين في Xcode وأنت تكتب
 #Preview {
     SetReminderView(viewModel: PlantsViewModel())
 }
